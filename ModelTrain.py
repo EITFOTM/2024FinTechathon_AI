@@ -1,22 +1,23 @@
 import torch
 from torchvision import transforms
+
+from ModelEfficientNet import efficientnet_b0
 from ModelCnn import *
 from ModelDataset import *
 import time
 import torch.optim as optim
 from torch.utils.data import DataLoader
-import torch_directml
+# import torch_directml
 
 
 def train(device: str):
     d = device
     if device in ['cuda', 'Cuda', 'CUDA']:
         device = torch.device(device)
-    elif device in ['gpu', 'GPU', 'Gpu']:
-        device = torch_directml.device(0)
+    # elif device in ['gpu', 'GPU', 'Gpu']:
+    #     device = torch_directml.device(0)
     else:
         device = torch.device('cpu')
-
 
     # 加载训练集
     root_dir = "data/Face2/Train"
@@ -25,21 +26,18 @@ def train(device: str):
     trains = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     fake_dataset = MyDataset(root_dir, fake_dir, transform=trains)
     real_dataset = MyDataset(root_dir, real_dir, transform=trains)
-    # print(fake_dataset.__len__())
-    # print(real_dataset.__len__())
-    # image, label = real_dataset[0]
-    # print(label)
-    # print(type(image))
-    # print(image)
-    train_dataset =fake_dataset + real_dataset
-    batch = 64
+    train_dataset = fake_dataset + real_dataset
+    batch = 16
     train_loader = DataLoader(train_dataset, batch_size=batch, shuffle=True)
+
     # 开始训练模型
     train_start_time = time.time()
     print(f'You are training on device: {d}.')
     loss = nn.CrossEntropyLoss().to(device)
-    model = Cnn().to(device)
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
+    # model = Cnn().to(device)
+    model = efficientnet_b0(2).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20)
     n_epochs = 1  # 循环轮数
     progress_bar_length = 25  # 进度条长度
     for epoch in range(n_epochs):
@@ -51,11 +49,11 @@ def train(device: str):
             images = images.to(device)
             labels = labels.to(device)
             outputs = model(images)
-            # print(outputs.shape, i)
             result_loss = loss(outputs, labels)
             optimizer.zero_grad()
             result_loss.backward()
             optimizer.step()
+            scheduler.step()
             running_loss += result_loss.item()
 
             # 更新进度条
@@ -82,7 +80,7 @@ def train(device: str):
     # 加载模型
     # print(torch.load('model_Cnn.pt'))
     # from ModelCnn import Cnn
-    # model_cnn = Cnn.load_state_dict(torch.load('ModelCnn.pt'))
+    # model_cnn = Cnn.load_state_dict(torch.load('ModelCnn1.pt'))
     # 加载测试集
     test_root_dir = "data/Face2/Train"
     test_fake_dir = "Fake"
@@ -125,9 +123,8 @@ def train(device: str):
 if __name__ == "__main__":
     time_start = time.time()
     # NVIDIA显卡用"cuda",其他显卡用"gpu",没有显卡用"cpu"（不推荐用cpu，不然会很慢）
-    train(device="gpu")
+    train(device="cuda")
     print("=" * 150)
-    # train("cpu")
     time_end = time.time()
     total_time = time_end - time_start
     print(f'Total time : {total_time:.4f} seconds')

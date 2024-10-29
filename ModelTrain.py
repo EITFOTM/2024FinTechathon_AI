@@ -1,21 +1,27 @@
-import torch
 from torchvision import transforms
-
-from ModelEfficientNet import efficientnet_b0
+from ModelEfficientNet import *
 from ModelCnn import *
 from ModelDataset import *
 import time
 import torch.optim as optim
 from torch.utils.data import DataLoader
-# import torch_directml
+import torch_directml
 
 
-def train(device: str):
+def train(device: str = 'cpu',
+          model_name: str = 'Cnn',
+          class_number: int = 2) -> None:
+    """
+    :param device: 在该设备上进行模型的训练
+    :param model_name: 选择训练时所使用的模型
+    :param class_number: 要求模型进行分类的个数，deepfake类型的问题类似与二分类问题，
+    即分析输入图片的真假性。
+    """
     d = device
     if device in ['cuda', 'Cuda', 'CUDA']:
         device = torch.device(device)
-    # elif device in ['gpu', 'GPU', 'Gpu']:
-    #     device = torch_directml.device(0)
+    elif device in ['gpu', 'GPU', 'Gpu']:
+        device = torch_directml.device(0)
     else:
         device = torch.device('cpu')
 
@@ -34,10 +40,10 @@ def train(device: str):
     train_start_time = time.time()
     print(f'You are training on device: {d}.')
     loss = nn.CrossEntropyLoss().to(device)
-    # model = Cnn().to(device)
-    model = efficientnet_b0(2).to(device)
+    model = globals()[model_name](num_classes=class_number)  # 找到对应模型并调用它
+    model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20)  # 基于余弦函数周期变化的学习率
     n_epochs = 1  # 循环轮数
     progress_bar_length = 25  # 进度条长度
     for epoch in range(n_epochs):
@@ -75,56 +81,17 @@ def train(device: str):
     train_time = train_end_time - train_start_time
     print(f'Training time: {train_time:.4f} seconds')
     print("-" * 50)
+
     # 保存模型
-    torch.save(model.state_dict(), 'ModelCnn.pt')
-    # 加载模型
-    # print(torch.load('model_Cnn.pt'))
-    # from ModelCnn import Cnn
-    # model_cnn = Cnn.load_state_dict(torch.load('ModelCnn1.pt'))
-    # 加载测试集
-    test_root_dir = "data/Face2/Train"
-    test_fake_dir = "Fake"
-    test_real_dir = "Real"
-    tests = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
-    test_fake_dataset = MyDataset(test_root_dir, test_fake_dir, transform=tests)
-    test_real_dataset = MyDataset(test_root_dir, test_real_dir, transform=tests)
-    test_dataset = test_fake_dataset + test_real_dataset
-    test_loader = DataLoader(test_dataset, batch_size=batch, shuffle=True)
-    # 评估模型
-    correct = 0
-    total = 0
-    print(f'You are testing on device: {d}.')
-    test_start_time = time.time()
-    with torch.no_grad():
-        for j, (test_images, test_labels) in enumerate(test_loader, 0):
-            batch_start_time = time.time()
-            test_images = test_images.to(device)
-            test_labels = test_labels.to(device)
-            outputs = model(test_images)
-            _, predicted = torch.max(outputs, 1)
-            total += test_labels.size(0)
-            correct += (predicted == test_labels).sum().item()
-            # 更新进度条
-            batch_end_time = time.time()
-            batch_time = batch_end_time - batch_start_time
-            test_batch_num = j + 1
-            test_progress = test_batch_num / len(test_loader)
-            test_progress_bar = ('>' * int(test_progress * progress_bar_length) +
-                            '-' * (progress_bar_length - int(test_progress * progress_bar_length)))
-            # 在同一行显示进度条
-            print(
-                f'\r\tBatch {j + 1}/{len(test_loader)} [{test_progress_bar}], Time: {batch_time:.4f} seconds',
-                end="")
-    test_end_time = time.time()
-    test_time = test_end_time - test_start_time
-    print(f'\nAccuracy:{100 * correct / total:.2f}%,on {d}, Test Time: {test_time:.4f} seconds.')
+    model_path = f'Model{model_name}.pt'
+    torch.save(model.state_dict(), model_path)
 
 
 if __name__ == "__main__":
     time_start = time.time()
     # NVIDIA显卡用"cuda",其他显卡用"gpu",没有显卡用"cpu"（不推荐用cpu，不然会很慢）
-    train(device="cuda")
+    train(device="cuda", model_name="efficient_b0", class_number=2)
     print("=" * 150)
     time_end = time.time()
     total_time = time_end - time_start
-    print(f'Total time : {total_time:.4f} seconds')
+    print(f'Total training time : {total_time:.4f} seconds')

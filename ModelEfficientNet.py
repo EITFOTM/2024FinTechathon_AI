@@ -3,11 +3,17 @@ import copy
 from functools import partial
 from collections import OrderedDict
 from typing import Optional, Callable
-
 import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.nn import functional as F
+'''
+该模型可以参考以下链接学习
+B站：EfficientNet网络解析
+https://www.bilibili.com/video/BV1XK4y1U7PX/?spm_id_from=333.337.search-card.all.click&vd_source=00637539cf3724583c1b6a35bbfe2c16
+CSDN：利用Pytorch实现EfficientNet网络
+https://blog.csdn.net/AdjsWsgz/article/details/130610784
+'''
 
 
 def _make_divisible(ch, divisor=8, min_ch=None):

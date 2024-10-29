@@ -92,12 +92,12 @@ class ConvBNActivation(nn.Sequential):
 
 
 class SqueezeExcitation(nn.Module):
-    '''
+    """
     针对得到的输出矩阵的每个channel进行池化处理，得到一维向量的元素个数等于channel数；
     经过第一个全连接层，节点个数是channel个数的1/4，激活函数是ReLU；经过第二个全连接层，
     节点个数等于channel个数，激活函数是hard-sigmoid；最后输出的向量是对矩阵的每个channel分析出了权重关系，
     重要的channel会分配一个比较大的权重，
-    '''
+    """
     def __init__(self,
                  input_c: int,   # block input channel
                  expand_c: int,  # block expand channel

@@ -1,12 +1,13 @@
 import thop
 import torch
 import numpy as np
-
+# pip install thop -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 def evaluation(model, device):
     """
     深度学习模型参数量/计算量和推理速度计算
     https://zhuanlan.zhihu.com/p/376925457?utm_id=0
+
     Evaluate model
     :param model:
     :param device:

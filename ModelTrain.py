@@ -90,7 +90,7 @@ def train(device: str = 'cpu',
 if __name__ == "__main__":
     time_start = time.time()
     # NVIDIA显卡用"cuda",其他显卡用"gpu",没有显卡用"cpu"（不推荐用cpu，不然会很慢）
-    train(device="cuda", model_name="efficient_b0", class_number=2)
+    train(device="cuda", model_name="efficientnet_b0", class_number=2)
     print("=" * 150)
     time_end = time.time()
     total_time = time_end - time_start

@@ -1,7 +1,41 @@
 import thop
-import torch
 import numpy as np
-# pip install thop -i https://pypi.tuna.tsinghua.edu.cn/simple
+import torch
+from ModelEfficientNet import *
+from ModelCnn import *
+
+
+def update_progress_bar(start_time, loader_len, batch_num, end_time):
+    # 更新进度条
+    progress_bar_length = 25  # 进度条长度
+    batch_time = end_time - start_time
+    progress = batch_num / loader_len
+    progress_bar = ('>' * int(progress * progress_bar_length) +
+                    '-' * (progress_bar_length - int(progress * progress_bar_length)))
+    # 在同一行显示进度条
+    print(
+        f'\r\tBatch {batch_num}/{loader_len} [{progress_bar}], Time: {batch_time:.4f} seconds',
+        end="")
+
+
+def model_load(model_name, device):
+    model = globals()[model_name]()  # 找到对应模型并调用它
+    model.to(device)
+    model_path = f'Model{model_name}.pt'
+    model.load_state_dict(torch.load(model_path))
+    return model
+
+
+def model_save(model_name, model):
+    model_path = f'Model{model_name}.pt'
+    torch.save(model.state_dict(), model_path)
+
+
+def model_create(model_name, device):
+    model = globals()[model_name]()
+    model.to(device)
+    return model
+
 
 def evaluation(model, device):
     """
@@ -12,7 +46,7 @@ def evaluation(model, device):
     :param device:
     """
     # FLOPs和Params计算
-    optimal_batch_size = 1
+    optimal_batch_size = 16
     inputs = torch.randn(optimal_batch_size, 3, 224, 224, dtype=torch.float).to(device)
     flops, params = thop.profile(model, inputs=(inputs,))
     print("FLOPs=", str(flops / 1e9) + '{}'.format("G"))
@@ -39,7 +73,7 @@ def evaluation(model, device):
     std_syn = np.std(timings)
     mean_fps = 1000. / mean_syn
     print(f' * Mean@1 {mean_syn:.3f}ms Std@5 {std_syn:.3f}ms FPS@1 {mean_fps:.2f}')
-    print(mean_syn)
+    print('mean_syn:', mean_syn)
 
     # 模型吞吐量计算
     repetitions = 100
@@ -57,4 +91,7 @@ def evaluation(model, device):
     print('FinalThroughput:', throughput)
 
 
-evaluation('efficientnet_b0', torch.device('cuda'))
+if __name__ == '__main__':
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model1 = model_load('efficientnet_b0', device)
+    evaluation(model1, device)

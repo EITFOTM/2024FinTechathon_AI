@@ -1,4 +1,3 @@
-# import torch_directml
 from ModelDataset import MyDataset
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -12,33 +11,29 @@ def test(device: str,
     :param device: 在该设备上进行模型的测试
     :param model_name: 选择测试时所使用的模型，需要该模型已经训练完成
     """
-    d = device
-    if device in ['cuda', 'Cuda', 'CUDA']:
-        device = torch.device(device)
-    # elif device in ['gpu', 'GPU', 'Gpu']:
-    #     device = torch_directml.device(0)
-    else:
-        device = torch.device('cpu')
-
-    # 加载模型
-    model = model_load(model_name, device)
-
     # 加载测试集
+    print("Loading dataset...")
     test_root_dir = "data/Face2/Train"
     test_fake_dir = "Fake"
     test_real_dir = "Real"
-    batch = 16
+    batch = 64
     tests = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor()])
     test_fake_dataset = MyDataset(test_root_dir, test_fake_dir, transform=tests)
     test_real_dataset = MyDataset(test_root_dir, test_real_dir, transform=tests)
     test_dataset = test_fake_dataset + test_real_dataset
     test_loader = DataLoader(test_dataset, batch_size=batch, shuffle=True)
 
+    # 加载模型
+    d = device
+    device = get_device(device)
+    model = model_load(model_name, device)
+    print(f'You are testing on device: {d}.')
+
     # 测试模型
     correct = 0
     total = 0
-    progress_bar_length = 25
-    print(f'You are testing on device: {d}.')
+    y_true = []
+    y_pred = []
     test_start_time = time.time()
     with torch.no_grad():
         for i, (test_images, test_labels) in enumerate(test_loader, 0):
@@ -49,10 +44,9 @@ def test(device: str,
             outputs = model(test_images)
             _, predicted = torch.max(outputs, 1)
             total += test_labels.size(0)
+            y_pred.extend(predicted.cpu().numpy())
+            y_true.extend(test_labels.cpu().numpy())
             correct += (predicted == test_labels).sum().item()
-            # print(predicted)
-            # print(test_labels)
-            # print(correct)
             batch_end_time = time.time()
 
             # 更新进度条
@@ -62,6 +56,9 @@ def test(device: str,
     # 评估模型训练效果
     test_end_time = time.time()
     test_time = test_end_time - test_start_time
+    print('\n', y_pred)
+    print(y_true)
+    cm = ConfusionMatrix(y_true, y_pred)
     print(f'\nAccuracy:{100 * correct / total:.2f}%,on {d}, Test Time: {test_time:.4f} seconds.')
 
 

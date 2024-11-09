@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from ModelEfficientNet import *
 from ModelCnn import *
+import sklearn.metrics as metrics
+# import torch_directml
 
 
 def update_progress_bar(start_time, loader_len, batch_num, end_time):
@@ -35,6 +37,15 @@ def model_create(model_name, device):
     model = globals()[model_name]()
     model.to(device)
     return model
+
+
+def get_device(device):
+    if device in ['cuda', 'Cuda', 'CUDA']:
+        return torch.device('cuda')
+    # elif device in ['gpu', 'GPU', 'Gpu']:
+    #     return torch_directml.device(0)
+    else:
+        return torch.device('cpu')
 
 
 def evaluation(model, device):
@@ -91,7 +102,49 @@ def evaluation(model, device):
     print('FinalThroughput:', throughput)
 
 
+class ConfusionMatrix:
+    """
+    使用Python绘制混淆矩阵
+    https://blog.csdn.net/xiaoshiqi17/article/details/136074424
+    """
+    def __init__(self, y_true, y_pred):
+        self.y_true = y_true
+        self.y_pred = y_pred
+        self.matrix = metrics.confusion_matrix(self.y_true, self.y_pred)
+
+        self.get_confusion_matrix()
+
+    def get_confusion_matrix(self):
+        total_num = len(self.y_true)
+        matrix = self.matrix
+        tp = matrix[0][0]
+        fp = matrix[0][1]
+        fn = matrix[1][0]
+        tn = matrix[1][1]
+        accuracy = 100 * (tp + tn)/total_num
+        ppv = 100 * tp/(tp+fp)
+        tpr = 100 * tp/(tp+fn)
+        tnr = 100 * tn/(tn+fn)
+        print(matrix)
+        cm_normalized = matrix.astype('float') / matrix.sum(axis=1)[:, np.newaxis]
+        print(cm_normalized)
+        print(f'Accuracy:{accuracy:.2f}%')
+        print(f'PPV:{ppv:.2f}%')
+        print(f'TPR:{tpr:.2f}%')
+        print(f'TNR:{tnr:.2f}%')
+
+    def plot_confusion_matrix(self):
+        pass
+
+
 if __name__ == '__main__':
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = get_device('cuda')
     model1 = model_load('efficientnet_b0', device)
     evaluation(model1, device)
+    true = torch.tensor([1,1,0,0,1,0,1,0,1])
+    pred = torch.tensor([1,1,1,1,1,0,0,0,0])
+    print(type(true))
+    true = true.numpy()
+    pred = pred.numpy()
+    cm = ConfusionMatrix(y_true=true, y_pred=pred)
+

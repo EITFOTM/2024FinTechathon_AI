@@ -19,15 +19,8 @@ def train(device: str = 'cpu',
     :param class_number: 要求模型进行分类的个数，deepfake类型的问题类似与二分类问题，
     即分析输入图片的真假性。
     """
-    d = device
-    if device in ['cuda', 'Cuda', 'CUDA']:
-        device = torch.device(device)
-    # elif device in ['gpu', 'GPU', 'Gpu']:
-    #     device = torch_directml.device(0)
-    else:
-        device = torch.device('cpu')
-
     # 加载训练集
+    print("Loading dataset...")
     root_dir = "data/Face2/Train"
     fake_dir = "Fake"
     real_dir = "Real"
@@ -39,13 +32,15 @@ def train(device: str = 'cpu',
     train_loader = DataLoader(train_dataset, batch_size=batch, shuffle=True)
 
     # 开始训练模型
-    train_start_time = time.time()
+    d = device
     print(f'You are training on device: {d}.')
+    device = get_device(device)
     loss = nn.CrossEntropyLoss().to(device)
     model = model_create(model_name, device)
     optimizer = optim.Adam(model.parameters(), lr=0.01)
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20)  # 基于余弦函数周期变化的学习率
     n_epochs = 1  # 循环轮数
+    train_start_time = time.time()
     for epoch in range(n_epochs):
         running_loss = 0.0
         epoch_start_time = time.time()

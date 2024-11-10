@@ -5,7 +5,7 @@ from ModelTools import *
 import time
 
 
-def test(device: str,
+def test(d: str,
          model_name: str = 'Cnn') -> None:
     """
     :param device: 在该设备上进行模型的测试
@@ -13,7 +13,7 @@ def test(device: str,
     """
     # 加载测试集
     print("Loading dataset...")
-    test_root_dir = "data/Face2/Train"
+    test_root_dir = "data/Face2/Test"
     test_fake_dir = "Fake"
     test_real_dir = "Real"
     batch = 64
@@ -24,9 +24,10 @@ def test(device: str,
     test_loader = DataLoader(test_dataset, batch_size=batch, shuffle=True)
 
     # 加载模型
-    d = device
-    device = get_device(device)
-    model = model_load(model_name, device)
+    device = get_device(d)
+    optimizer_name = "SGD"
+    epochs = "3"
+    model = model_load(model_name, device, optimizer_name, epochs)
     print(f'You are testing on device: {d}.')
 
     # 测试模型
@@ -53,20 +54,26 @@ def test(device: str,
             batch_num = i + 1
             update_progress_bar(batch_start_time, test_loader_len, batch_num, batch_end_time)
 
-    # 评估模型训练效果
     test_end_time = time.time()
     test_time = test_end_time - test_start_time
-    print('\n', y_pred)
-    print(y_true)
+    print('\n')
+    # 混淆矩阵分析模型预测的结果
     cm = ConfusionMatrix(y_true, y_pred)
-    print(f'\nAccuracy:{100 * correct / total:.2f}%,on {d}, Test Time: {test_time:.4f} seconds.')
+    # cm.plot_confusion_matrix()
+    # 模型参数量/计算量和推理速度计算
+    evaluation(model, device)
+    minutes, seconds = divmod(test_time, 60)
+    print(f'\nAccuracy:{100 * correct / total:.2f}%,on {d}, '
+          f'Test time: {minutes}minutes {seconds}seconds.')
+    print("-" * 100)
 
 
 if __name__ == '__main__':
     time_start = time.time()
     # NVIDIA显卡用"cuda",其他显卡用"gpu",没有显卡用"cpu"（不推荐用cpu，不然会很慢）
-    test(device='cuda', model_name='efficientnet_b0')
+    test(d='cuda', model_name='efficientnet_b0')
     print("=" * 150)
     time_end = time.time()
     total_time = time_end - time_start
-    print(f'Total time : {total_time:.4f} seconds')
+    minutes, seconds = divmod(total_time, 60)
+    print(f'Total time : {minutes}minutes {seconds}seconds')

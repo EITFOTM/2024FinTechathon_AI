@@ -28,13 +28,13 @@ def update_progress_bar(start_time, loader_len, batch_num, end_time, current_los
 def model_load(model_name, device, optimizer_name, epochs):
     model = globals()[model_name]()  # 找到对应模型并调用它
     model.to(device)
-    model_path = f'Model{model_name}_{optimizer_name}_e{epochs}.pth'
+    model_path = f'Model{model_name}_{optimizer_name}_e{epochs}.pt'
     model.load_state_dict(torch.load(model_path, weights_only=False))
     return model
 
 
 def model_save(model_name, model, optimizer_name, epochs):
-    model_path = f'Model{model_name}_{optimizer_name}_e{epochs}.pth'
+    model_path = f'Model{model_name}_{optimizer_name}_e{epochs}.pt'
     torch.save(model.state_dict(), model_path)
 
 
@@ -164,7 +164,7 @@ class ConfusionMatrix:
 
 if __name__ == '__main__':
     device = get_device('cuda')
-    model1 = model_load('efficientnet_b0', device, "SGD", "3")
+    model1 = model_load('efficientnet_b0', device, "SGD", "6")
     evaluation(model1, device)
     true = torch.tensor([1,1,0,0,1,0,1,0,1])
     pred = torch.tensor([1,1,1,1,1,0,0,0,0])

@@ -101,11 +101,12 @@ def update_progress_bar(phase: str, start_time: float, loader_len: int,
         f'Current loss: {current_loss:.4f}', end="")
 
 
-def model_load(model_name: str, device: torch.device, optimizer_name: str, epochs: int):
+def model_load(model_name: str, device: torch.device, d: str, optimizer_name: str, epochs: int):
     """
 
     :param model_name: 训练时所使用的模型名字
     :param device: 使用的设备
+    :param d: 设备的名字
     :param optimizer_name: 训练时所使用的优化器名字
     :param epochs: 训练的轮次数
     :return: 返回之前训练完的模型、准确率和优化器参数
@@ -113,11 +114,13 @@ def model_load(model_name: str, device: torch.device, optimizer_name: str, epoch
     model = globals()[model_name]()  # 找到对应模型并调用它
     model.to(device)
     model_path = f'Model{model_name}_{optimizer_name}_e{epochs}.pt'
-    state = torch.load(model_path, weights_only=False)
+    state = torch.load(model_path, map_location=d, weights_only=False)
     model.load_state_dict(state['state_dict'])
     best_acc = state['best_acc']
     optimizer_state_dict = state['optimizer']
-    return model, best_acc, optimizer_state_dict
+    history = {'train_acc_history': state['train_acc_history'], 'valid_acc_history': state['valid_acc_history'],
+               'train_loss_history': state['train_loss_history'], 'valid_loss_history': state['valid_loss_history']}
+    return model, best_acc, optimizer_state_dict, history
 
 
 def model_save(model_name: str, state: dict, optimizer_name: str, epochs: int):
@@ -291,7 +294,7 @@ if __name__ == '__main__':
     # model = globals()[model_name]()  # 找到对应模型并调用它
     # model.to(device)
     # model_path = 'Modelefficientnet_b0_Adam_e3.pt'
-    # l = torch.load(model_path, weights_only=False)
+    l = torch.load('Modelefficientnet_b0_SGD_e1.pt', weights_only=False)
     # best_acc = l['best_acc'].item()
 
     # print(l['s'])

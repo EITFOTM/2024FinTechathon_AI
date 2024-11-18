@@ -59,9 +59,7 @@ def train(d: str = 'cpu',
     else:
         model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
 
-
     # 优化器详解可参考：https://blog.csdn.net/2301_76846375/article/details/141476689
-
     if optimizer_name == 'Adam':
         # Adam 优化器是一种自适应学习率的优化算法，结合了动量梯度下降和 RMSprop 算法的思想。
         # 它通过自适应地调整每个参数的学习率，从而在训练过程中加速收敛。
@@ -94,7 +92,10 @@ def train(d: str = 'cpu',
     # 开始训练模型
     start_time = time.time()
     for epoch in range(n_epochs):
-        print(f'Epoch {epoch + 1}/{n_epochs}')
+        if pre_epochs is None:
+            print(f'Epoch {epoch + 1}/{n_epochs}')
+        else:
+            print(f'Epoch {epoch + 1 + pre_epochs}/{n_epochs + pre_epochs}')
         print('-' * 10)
         for phase in data_type:
             if phase == 'Train':

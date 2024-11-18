@@ -32,7 +32,7 @@ def test(d: str,
     device = get_device(d)
     print(f'You are testing on the {device}.')
 
-    model, best_acc, optimizer_state_dict = model_load(model_name, device, optimizer_name, pre_epochs)
+    model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
     # model = globals()[model_name]()  # 找到对应模型并调用它
     # model.to(device)
     # model_path = f'Model{model_name}.pt'

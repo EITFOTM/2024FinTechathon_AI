@@ -29,7 +29,7 @@ def train(d: str = 'cpu',
     datasets_dir = ["Face2", "Face3"]
     data_type = ["Train", "Valid"]
     classes = ["Fake", "Real"]
-    batch = 96
+    batch = 16
     # 图像增强详见：https://blog.csdn.net/weixin_46334272/article/details/135395701
     # 进行数据预处理和增强操作:通过对训练集进行各种变换和扩增操作，可以增加训练数据的多样性和丰富性，从而提高模型的泛化能力。
     # 数据增强的目的是通过对训练集中的图像进行随机变换，生成更多样的图像样本，以模拟真实世界中的各种场景和变化。
@@ -57,7 +57,7 @@ def train(d: str = 'cpu',
     if pre_epochs is None:
         model = model_create(model_name, device)
     else:
-        model, best_acc, optimizer_state_dict = model_load(model_name, device, optimizer_name, pre_epochs)
+        model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
 
 
     # 优化器详解可参考：https://blog.csdn.net/2301_76846375/article/details/141476689
@@ -73,18 +73,22 @@ def train(d: str = 'cpu',
     optimizer_name = optimizer.__class__.__name__
     if pre_epochs is None:
         best_acc = 0  # 记录最好的正确率
+        train_acc_history = []
+        valid_acc_history = []
+        train_loss_history = []
+        valid_loss_history = []
     else:
         optimizer.load_state_dict(optimizer_state_dict)
         best_acc = best_acc.item()
+        train_acc_history = history['train_acc_history']
+        valid_acc_history = history['valid_acc_history']
+        train_loss_history = history['train_loss_history']
+        valid_loss_history = history['valid_loss_history']
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20)  # 基于余弦函数周期变化的学习率
     # 如果最后一层有LogSoftmax()，则不能用nn.CrossEntropyLoss()，因为nn.CrossEntropyLoss()相当于LogSoftmax()和nn.NLLLoss()整合
     # criterion = nn.NLLLoss().to(device)
     criterion = nn.CrossEntropyLoss().to(device)
-    train_acc_history = []
-    valid_acc_history = []
-    train_loss_history = []
-    valid_loss_history = []
     lrs = [optimizer.param_groups[0]['lr']]
     best_model_wts = copy.deepcopy(model.state_dict())  # 保存效果最好的模型
     # 开始训练模型
@@ -137,21 +141,24 @@ def train(d: str = 'cpu',
             # 和epoch+1和gup信息
             print(f'Total time spent on this epoch: {epoch_minutes:.0f} minutes {epoch_seconds:.1f} seconds')
             # 得到最好那次的模型
-            if phase == 'Valid' and phase_acc > best_acc:
-                best_acc = phase_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
-                state = {'state_dict': best_model_wts,
-                         'best_acc': best_acc,
-                         'optimizer': optimizer.state_dict()
-                         }
-                model_save(model_name, state, optimizer_name, epoch+1)
             if phase == 'Valid':
                 valid_acc_history.append(phase_acc)
                 valid_loss_history.append(phase_loss)
             if phase == 'Train':
                 train_acc_history.append(phase_acc)
                 train_loss_history.append(phase_loss)
-
+            if phase == 'Valid' and phase_acc > best_acc:
+                best_acc = phase_acc
+                best_model_wts = copy.deepcopy(model.state_dict())
+                state = {'state_dict': model.state_dict(),
+                         'best_acc': best_acc,
+                         'optimizer': optimizer.state_dict(),
+                         'train_acc_history': train_acc_history,
+                         'valid_acc_history': valid_acc_history,
+                         'train_loss_history': train_loss_history,
+                         'valid_loss_history': valid_loss_history
+                         }
+                model_save(model_name, state, optimizer_name, epoch+1)
         print('Optimizer learning rate: {:.6f}'.format(optimizer.param_groups[0]['lr']))
         lrs.append(optimizer.param_groups[0]['lr'])
         print()
@@ -166,7 +173,11 @@ def train(d: str = 'cpu',
     model.load_state_dict(best_model_wts)
     state = {'state_dict': model.state_dict(),
              'best_acc': best_acc,
-             'optimizer': optimizer.state_dict()
+             'optimizer': optimizer.state_dict(),
+             'train_acc_history': train_acc_history,
+             'valid_acc_history': valid_acc_history,
+             'train_loss_history': train_loss_history,
+             'valid_loss_history': valid_loss_history
              }
     # 模型保存时增加优化器名字，轮数epoch
     if pre_epochs is None:
@@ -177,9 +188,9 @@ def train(d: str = 'cpu',
 
 if __name__ == "__main__":
     model_name = 'efficientnet_b0'
-    optimizer_name = "Adam"
+    optimizer_name = "SGD"
     lr = 0.01
-    epochs = 1
+    epochs = 2
     pre_epochs = None
     d = 'cuda'
     # NVIDIA显卡用"cuda"，没有显卡用"cpu"

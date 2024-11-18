@@ -3,12 +3,16 @@ import torch
 import cpuinfo
 import torchvision
 import numpy as np
+from mpmath.libmp import normalize
+
 from ModelCnn import *
 from ModelDataset import *
 from ModelEfficientNet import *
 import sklearn.metrics as metrics
 from torchvision import transforms
 from torch.utils.data import DataLoader, ConcatDataset
+import matplotlib.pyplot as plt
+import itertools
 # pip install py-cpuinfo -i https://pypi.tuna.tsinghua.edu.cn/simple
 # pip install scikit-learn -i https://pypi.tuna.tsinghua.edu.cn/simple
 # pip install thop -i https://pypi.tuna.tsinghua.edu.cn/simple
@@ -200,10 +204,12 @@ class ConfusionMatrix:
     使用Python绘制混淆矩阵
     https://blog.csdn.net/xiaoshiqi17/article/details/136074424
     """
-    def __init__(self, y_true, y_pred):
+    def __init__(self, y_true, y_pred,y_labels,normalize):
         self.y_true = y_true
         self.y_pred = y_pred
         self.matrix = metrics.confusion_matrix(self.y_true, self.y_pred)
+        self.labels = y_labels
+        self.normalize = normalize
 
         self.get_confusion_matrix()
 
@@ -227,7 +233,48 @@ class ConfusionMatrix:
         print(f'TNR:{tnr:.2f}%')
 
     def plot_confusion_matrix(self):
-        pass
+        matrix = self.matrix
+        classes = self.labels
+        normalize = self.normalize
+        title = 'Confusion matrix'
+        cmap = plt.cm.Blues  # 绘制的颜色
+
+        print('normalize: ', normalize)
+
+        """
+         - matrix : 计算出的混淆矩阵的值
+         - classes : 混淆矩阵中每一行每一列对应的列
+         - normalize : True:显示百分比, False:显示个数
+         """
+        if normalize:
+            matrix = matrix.astype('float') / matrix.sum(axis=1)[:, np.newaxis]
+            print("显示百分比：")
+            np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
+            print(matrix)
+        else:
+            print('显示具体数字：')
+            print(matrix)
+        plt.imshow(matrix, interpolation='nearest', cmap=cmap)
+        plt.title(title)
+        plt.colorbar()
+        tick_marks = np.arange(len(classes))
+        plt.xticks(tick_marks, classes, rotation=45, ha='right')
+        plt.yticks(tick_marks, classes)
+        # matplotlib版本问题，如果不加下面这行代码，则绘制的混淆矩阵上下只能显示一半，有的版本的matplotlib不需要下面的代码，分别试一下即可
+        plt.ylim(len(classes) - 0.5, -0.5)
+        fmt = '.2f' if normalize else '.0f'
+        thresh = matrix.max() / 2.
+        for i, j in itertools.product(range(matrix.shape[0]), range(matrix.shape[1])):
+            plt.text(j, i, format(matrix[i, j], fmt),
+                     horizontalalignment="center",
+                     color="black")
+        plt.tight_layout()
+        plt.gcf().subplots_adjust(bottom=0.3)
+        plt.ylabel('True label')
+        plt.xlabel('Predicted label')
+        plt.show()
+
+
 
 
 if __name__ == '__main__':
@@ -257,13 +304,17 @@ if __name__ == '__main__':
     # optimizer_state_dict = state['optimizer']
     # return model, best_acc, optimizer_state_dict
     # evaluation(model, device)
-    # true = torch.tensor([1,1,0,0,1,0,1,0,1]).to(device)
-    # pred = torch.tensor([1,1,1,1,1,0,0,0,0]).to(device)
+    #true = torch.tensor([1,1,0,0,1,0,1,0,1]).to(device)
+    #pred = torch.tensor([1,1,1,1,1,0,0,0,0]).to(device)
     # print(true.device.index)
     # print(type(true))
-    # true = true.numpy()
-    # pred = pred.numpy()
-    # cm = ConfusionMatrix(y_true=true, y_pred=pred)
+    #true = true.numpy()
+    #pred = pred.numpy()
+    #true=[1,1,0,0,1,0,1,0,1]
+    #pred=[1,1,1,1,1,0,0,0,0]
+    #normalize=true
+    #cm = ConfusionMatrix(y_true=true, y_pred=pred,y_labels=["true","fake"],normalize=normalize)
+    #cm.plot_confusion_matrix()
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
     # print(type(optimizer).__name__)
 

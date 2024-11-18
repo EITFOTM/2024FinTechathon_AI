@@ -5,7 +5,9 @@ from ModelTools import *
 import time
 
 
-def test(d: str,
+def test(y_labels,
+         normalize,
+         d: str,
          pre_epochs: int,
          model_name: str = 'Cnn',
          optimizer_name: str = "SGD") -> None:
@@ -67,8 +69,9 @@ def test(d: str,
     test_time = test_end_time - test_start_time
     print('\n')
     # 混淆矩阵分析模型预测的结果
-    cm = ConfusionMatrix(y_true, y_pred)
-    # cm.plot_confusion_matrix()
+    cm = ConfusionMatrix(y_true, y_pred,y_labels,normalize)
+    # 混淆矩阵可视化
+    cm.plot_confusion_matrix()
     # 模型参数量/计算量和推理速度计算
     evaluation(model, device)
     minutes, seconds = divmod(test_time, 60)
@@ -81,6 +84,8 @@ if __name__ == '__main__':
     optimizer_name = 'Adam'
     model_name = "efficientnet_b0"
     d = 'cuda'
+    y_labels=["Fake", "Real"]
+    normalize = True
     # NVIDIA显卡用"cuda"，没有显卡用"cpu"
-    test(d=d, pre_epochs=pre_epochs, model_name=model_name, optimizer_name=optimizer_name)
+    test(d=d, pre_epochs=pre_epochs, model_name=model_name, optimizer_name=optimizer_name,y_labels=y_labels,normalize=normalize)
     print("=" * 150)

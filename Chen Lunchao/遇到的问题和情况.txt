@@ -1,14 +1,27 @@
 数据集方面：
 Face2中的数据集来源于kaggle：https://www.kaggle.com/datasets/manjilkarki/deepfake-and-real-images?select=Dataset
-Face3中的Fake数据集为PGGAN的train、valid和test，Real数据集的test为align_celeba数据集的最后一万张图片（192600-202599），valid为除了test的最后二万张图片（172600-192599），train为剩余的图片（1-172599）。其中PGGAN的数据来源于https://pan.baidu.com/s/1_GgADkJpHrM6kM0AhF7nrg?pwd=o4rr里的PGGAN。CelebA来源于https://pan.baidu.com/s/1eSNpdRG#list/path=%2F里的img_align_celeba_png.7z，经过调整的celeba是提取了图片的人脸，剔除了大多数人脸以外的信息。
+Face3中的Fake数据集为PGGAN的train、valid和test，Real数据集的test为align_celeba数据集的最后一万张图片（192600-202599），
+valid为除了test的最后二万张图片（172600-192599），train为剩余的图片（1-172599）。
+其中PGGAN的数据来源于https://pan.baidu.com/s/1_GgADkJpHrM6kM0AhF7nrg?pwd=o4rr里的PGGAN。
+CelebA来源于https://pan.baidu.com/s/1eSNpdRG#list/path=%2F里的img_align_celeba_png.7z，
+经过调整的celeba是提取了图片的人脸，剔除了大多数人脸以外的信息。
 
 训练设备方面：要使用NVIDIA以外的显卡进行加速训练需要下载包torch-directml，比如
 pip install torch torchvision==0.18.1 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip uninstall torch 
 pip install torch-directml==0.2.3dev240715 -i https://pypi.tuna.tsinghua.edu.cn/simple
 
-优化器方面：Adam是一种自适应学习率的优化算法，结合了动量梯度下降和 RMSprop 算法的思想。它通过自适应地调整每个参数的学习率，从而在训练过程中加速收敛。所以Adam优化器的初始学习率可以随意设置，且性能更好，不过因此Adam相对于SGD更复杂，训练时间可能更长。
-随机梯度下降（SGD）是一种梯度下降形式，对于每次前向传递，都会从总的数据集中随机选择一批数据，即批次大小1。如果学习率不是变化的话，SGD的初始学习率需要设置较小一点，否则可能会导致模型在最优解附近来回振荡，无法稳定地收敛到最优解‌‌，使得训练过程不稳定。但学习率过小也会导致其收敛速度变慢，训练过程边长等问题，所以其性能比Adam略微差一点。
+优化器方面：Adam是一种自适应学习率的优化算法，结合了动量梯度下降和 RMSprop 算法的思想。
+它通过自适应地调整每个参数的学习率，从而在训练过程中加速收敛。所以Adam优化器的初始学习率可以随意设置，
+且性能更好，不过因此Adam相对于SGD更复杂，训练时间可能更长。
+
+随机梯度下降（SGD）是一种梯度下降形式，对于每次前向传递，都会从总的数据集中随机选择一批数据，
+即批次大小1。如果学习率不是变化的话，SGD的初始学习率需要设置较小一点，
+否则可能会导致模型在最优解附近来回振荡，无法稳定地收敛到最优解‌‌，使得训练过程不稳定。
+但学习率过小也会导致其收敛速度变慢，训练过程边长等问题，所以其性能比Adam略微差一点。
 
 学习率方面：详见LearningRate.py。
 
+训练Vgg16时：使用Adam优化器的话会导致损失值异常高，使用SGD优化器就不会出现这种情况
+
+训练Cnn时：第一次epoch的准确率最高，之后准确率下降，并保持一定的值不动，可能陷入局部最优了

@@ -34,7 +34,7 @@ def test(y_labels,
     device = get_device(d)
     print(f'You are testing on the {device}.')
 
-    model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
+    model, best_acc, optimizer_state_dict, history = model_load(y_labels,normalize,model_name, device, d, optimizer_name, pre_epochs)
     # model = globals()[model_name]()  # 找到对应模型并调用它
     # model.to(device)
     # model_path = f'Model{model_name}.pt'
@@ -80,7 +80,7 @@ def test(y_labels,
 
 
 if __name__ == '__main__':
-    pre_epochs = 1
+    pre_epochs = 3
     optimizer_name = 'Adam'
     model_name = "efficientnet_b0"
     d = 'cuda'

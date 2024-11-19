@@ -101,7 +101,7 @@ def update_progress_bar(phase: str, start_time: float, loader_len: int,
         f'Current loss: {current_loss:.4f}', end="")
 
 
-def model_load(model_name: str, device: torch.device, d: str, optimizer_name: str, epochs: int):
+def model_load(y_labels,normalize,model_name: str, device: torch.device, d: str, optimizer_name: str, epochs: int):
     """
 
     :param model_name: 训练时所使用的模型名字
@@ -294,7 +294,7 @@ if __name__ == '__main__':
     # model = globals()[model_name]()  # 找到对应模型并调用它
     # model.to(device)
     # model_path = 'Modelefficientnet_b0_Adam_e3.pt'
-    l = torch.load('Modelefficientnet_b0_SGD_e1.pt', weights_only=False)
+    #l = torch.load('Modelefficientnet_b0_SGD_e1.pt', weights_only=False)
     # best_acc = l['best_acc'].item()
 
     # print(l['s'])
@@ -313,11 +313,11 @@ if __name__ == '__main__':
     # print(type(true))
     #true = true.numpy()
     #pred = pred.numpy()
-    #true=[1,1,0,0,1,0,1,0,1]
-    #pred=[1,1,1,1,1,0,0,0,0]
+    true=[1,1,0,0,1,0,1,0,1]
+    pred=[1,1,1,1,1,0,0,0,0]
     #normalize=true
-    #cm = ConfusionMatrix(y_true=true, y_pred=pred,y_labels=["true","fake"],normalize=normalize)
-    #cm.plot_confusion_matrix()
+    cm = ConfusionMatrix(y_true=true, y_pred=pred,y_labels=["true","fake"],normalize=normalize)
+    cm.plot_confusion_matrix()
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
     # print(type(optimizer).__name__)
 

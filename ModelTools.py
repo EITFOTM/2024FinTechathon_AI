@@ -101,7 +101,7 @@ def update_progress_bar(phase: str, start_time: float, loader_len: int,
         f'Current loss: {current_loss:.4f}', end="")
 
 
-def model_load(y_labels,normalize,model_name: str, device: torch.device, d: str, optimizer_name: str, epochs: int):
+def model_load(model_name: str, device: torch.device, d: str, optimizer_name: str, epochs: int):
     """
 
     :param model_name: 训练时所使用的模型名字
@@ -211,7 +211,7 @@ class ConfusionMatrix:
         self.y_true = y_true
         self.y_pred = y_pred
         self.matrix = metrics.confusion_matrix(self.y_true, self.y_pred)
-        self.labels = y_labels
+        self.y_labels = y_labels
         self.normalize = normalize
 
         self.get_confusion_matrix()
@@ -237,7 +237,7 @@ class ConfusionMatrix:
 
     def plot_confusion_matrix(self):
         matrix = self.matrix
-        classes = self.labels
+        classes = self.y_labels
         normalize = self.normalize
         title = 'Confusion matrix'
         cmap = plt.cm.Blues  # 绘制的颜色
@@ -281,11 +281,11 @@ class ConfusionMatrix:
 
 
 if __name__ == '__main__':
-    device = get_device('cuda')
-    print(device)
-    print(torch.cuda.is_available())
-    print(torch.__version__)
-    print(torchvision.__version__)
+    #device = get_device('cuda')
+    #print(device)
+    #print(torch.cuda.is_available())
+    #print(torch.__version__)
+    #print(torchvision.__version__)
     # optimizer_name = "Adam"
     # epochs = "3"
     # model = model_load('efficientnet_b0', device, optimizer_name, epochs)
@@ -313,12 +313,21 @@ if __name__ == '__main__':
     # print(type(true))
     #true = true.numpy()
     #pred = pred.numpy()
-    true=[1,1,0,0,1,0,1,0,1]
-    pred=[1,1,1,1,1,0,0,0,0]
+    #true=[1,1,0,0,1,0,1,0,1]
+    #pred=[1,1,1,1,1,0,0,0,0]
     #normalize=true
-    cm = ConfusionMatrix(y_true=true, y_pred=pred,y_labels=["true","fake"],normalize=normalize)
-    cm.plot_confusion_matrix()
+    #cm = ConfusionMatrix(y_true=true, y_pred=pred,y_labels=["true","fake"],normalize=normalize)
+    #cm.plot_confusion_matrix()
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
     # print(type(optimizer).__name__)
+    d="cuda"
+    model_name="efficientnet_b0"
+    optimizer_name="Adam"
+    pre_epochs = 3
+    device = get_device(d)
+    model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
+    print("the device is:",d,"the optimizer is:",optimizer_name,"the model is:",model_name)
+    evaluation(model, device)
+
 
 

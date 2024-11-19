@@ -5,8 +5,7 @@ from ModelTools import *
 import time
 
 
-def test(y_labels,
-         normalize,
+def test(normalize,
          d: str,
          pre_epochs: int,
          model_name: str = 'Cnn',
@@ -34,7 +33,7 @@ def test(y_labels,
     device = get_device(d)
     print(f'You are testing on the {device}.')
 
-    model, best_acc, optimizer_state_dict, history = model_load(y_labels,normalize,model_name, device, d, optimizer_name, pre_epochs)
+    model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
     # model = globals()[model_name]()  # 找到对应模型并调用它
     # model.to(device)
     # model_path = f'Model{model_name}.pt'
@@ -69,7 +68,7 @@ def test(y_labels,
     test_time = test_end_time - test_start_time
     print('\n')
     # 混淆矩阵分析模型预测的结果
-    cm = ConfusionMatrix(y_true, y_pred,y_labels,normalize)
+    cm = ConfusionMatrix(y_true, y_pred,classes,normalize)
     # 混淆矩阵可视化
     cm.plot_confusion_matrix()
     # 模型参数量/计算量和推理速度计算
@@ -84,8 +83,7 @@ if __name__ == '__main__':
     optimizer_name = 'Adam'
     model_name = "efficientnet_b0"
     d = 'cuda'
-    y_labels=["Fake", "Real"]
     normalize = True
     # NVIDIA显卡用"cuda"，没有显卡用"cpu"
-    test(d=d, pre_epochs=pre_epochs, model_name=model_name, optimizer_name=optimizer_name,y_labels=y_labels,normalize=normalize)
+    test(d=d, pre_epochs=pre_epochs, model_name=model_name, optimizer_name=optimizer_name,normalize=normalize)
     print("=" * 150)

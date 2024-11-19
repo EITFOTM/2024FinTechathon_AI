@@ -190,13 +190,13 @@ def train(d: str = 'cpu',
 
 
 if __name__ == "__main__":
-    # model_name = 'efficientnet_b0'
-    model_name = 'Vgg16'  # Vgg16模型不能用Adam优化器，否则可能会出现损失异常大的情况
-    optimizer_name = "SGD"
+    model_name = 'efficientnet_b0'
+    # model_name = 'Vgg16'  # Vgg16模型不能用Adam优化器，否则可能会出现损失异常大的情况
+    optimizer_name = "Adam"
     lr = 0.01
-    epochs = 2
+    epochs = 3
     pre_epochs = None
-    d = 'cpu'
+    d = 'cuda'
     # NVIDIA显卡用"cuda"，没有显卡用"cpu"
     train(d=d, model_name=model_name, optimizer_name=optimizer_name,
           learning_rate=lr, n_epochs=epochs, pre_epochs=pre_epochs)

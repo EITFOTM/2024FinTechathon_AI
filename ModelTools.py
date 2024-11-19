@@ -4,7 +4,6 @@ import cpuinfo
 import torchvision
 import numpy as np
 from mpmath.libmp import normalize
-
 from ModelCnn import *
 from ModelDataset import *
 from ModelEfficientNet import *
@@ -111,10 +110,14 @@ def model_load(model_name: str, device: torch.device, d: str, optimizer_name: st
     :param epochs: 训练的轮次数
     :return: 返回之前训练完的模型、准确率和优化器参数
     """
-    model = globals()[model_name]()  # 找到对应模型并调用它
+    if model_name == 'Vgg16':
+        model = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.DEFAULT)
+        model.classifier[-1] = nn.Linear(in_features=4096, out_features=2)
+    else:
+        model = globals()[model_name]()  # 找到对应模型并调用它
     model.to(device)
     model_path = f'Model{model_name}_{optimizer_name}_e{epochs}.pt'
-    state = torch.load(model_path, map_location=d, weights_only=False)
+    state = torch.load(model_path, map_location=device, weights_only=False)
     model.load_state_dict(state['state_dict'])
     best_acc = state['best_acc']
     optimizer_state_dict = state['optimizer']
@@ -143,7 +146,11 @@ def model_create(model_name: str, device: torch.device):
     :param device: 使用的设备
     :return: 返回创建完的模型
     """
-    model = globals()[model_name]()
+    if model_name == 'Vgg16':
+        model = torchvision.models.vgg16(weights=torchvision.models.VGG16_Weights.DEFAULT)
+        model.classifier[-1] = nn.Linear(in_features=4096, out_features=2)
+    else:
+        model = globals()[model_name]()
     model.to(device)
     return model
 

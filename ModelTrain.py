@@ -85,8 +85,10 @@ def train(d: str = 'cpu',
 
     scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=20)  # 基于余弦函数周期变化的学习率
     # 如果最后一层有LogSoftmax()，则不能用nn.CrossEntropyLoss()，因为nn.CrossEntropyLoss()相当于LogSoftmax()和nn.NLLLoss()整合
-    # criterion = nn.NLLLoss().to(device)
-    criterion = nn.CrossEntropyLoss().to(device)
+    if model_name == 'Cnn':
+        criterion = nn.NLLLoss().to(device)
+    else:
+        criterion = nn.CrossEntropyLoss().to(device)
     lrs = [optimizer.param_groups[0]['lr']]
     best_model_wts = copy.deepcopy(model.state_dict())  # 保存效果最好的模型
     # 开始训练模型
@@ -133,8 +135,8 @@ def train(d: str = 'cpu',
                 batch_num = i + 1
                 update_progress_bar(phase, batch_start_time, loader_len, batch_num, batch_end_time, current_loss)
 
-            phase_loss = running_loss / len(loaders[phase].dataset)
-            phase_acc = running_corrects.double() / len(loaders[phase].dataset)
+            phase_loss = running_loss / dataset_size[phase]
+            phase_acc = running_corrects.double() / dataset_size[phase]
             phase_end_time = time.time()
             epoch_time = phase_end_time - phase_start_time
             print(f'\n{phase} mean loss: {phase_loss:.4f}, total loss: {running_loss:.0f}, acc: {phase_acc:.4f}.')
@@ -188,12 +190,13 @@ def train(d: str = 'cpu',
 
 
 if __name__ == "__main__":
-    model_name = 'efficientnet_b0'
+    # model_name = 'efficientnet_b0'
+    model_name = 'Vgg16'  # Vgg16模型不能用Adam优化器，否则可能会出现损失异常大的情况
     optimizer_name = "SGD"
     lr = 0.01
     epochs = 2
     pre_epochs = None
-    d = 'cuda'
+    d = 'cpu'
     # NVIDIA显卡用"cuda"，没有显卡用"cpu"
     train(d=d, model_name=model_name, optimizer_name=optimizer_name,
           learning_rate=lr, n_epochs=epochs, pre_epochs=pre_epochs)

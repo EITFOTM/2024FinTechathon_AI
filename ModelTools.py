@@ -211,7 +211,7 @@ class ConfusionMatrix:
         self.y_true = y_true
         self.y_pred = y_pred
         self.matrix = metrics.confusion_matrix(self.y_true, self.y_pred)
-        self.labels = y_labels
+        self.y_labels = y_labels
         self.normalize = normalize
 
         self.get_confusion_matrix()
@@ -237,7 +237,7 @@ class ConfusionMatrix:
 
     def plot_confusion_matrix(self):
         matrix = self.matrix
-        classes = self.labels
+        classes = self.y_labels
         normalize = self.normalize
         title = 'Confusion matrix'
         cmap = plt.cm.Blues  # 绘制的颜色
@@ -281,11 +281,11 @@ class ConfusionMatrix:
 
 
 if __name__ == '__main__':
-    device = get_device('cuda')
-    print(device)
-    print(torch.cuda.is_available())
-    print(torch.__version__)
-    print(torchvision.__version__)
+    #device = get_device('cuda')
+    #print(device)
+    #print(torch.cuda.is_available())
+    #print(torch.__version__)
+    #print(torchvision.__version__)
     # optimizer_name = "Adam"
     # epochs = "3"
     # model = model_load('efficientnet_b0', device, optimizer_name, epochs)
@@ -294,7 +294,7 @@ if __name__ == '__main__':
     # model = globals()[model_name]()  # 找到对应模型并调用它
     # model.to(device)
     # model_path = 'Modelefficientnet_b0_Adam_e3.pt'
-    l = torch.load('Modelefficientnet_b0_SGD_e1.pt', weights_only=False)
+    #l = torch.load('Modelefficientnet_b0_SGD_e1.pt', weights_only=False)
     # best_acc = l['best_acc'].item()
 
     # print(l['s'])
@@ -320,5 +320,14 @@ if __name__ == '__main__':
     #cm.plot_confusion_matrix()
     # optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
     # print(type(optimizer).__name__)
+    d="cuda"
+    model_name="efficientnet_b0"
+    optimizer_name="Adam"
+    pre_epochs = 3
+    device = get_device(d)
+    model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
+    print("the device is:",d,"the optimizer is:",optimizer_name,"the model is:",model_name)
+    evaluation(model, device)
+
 
 

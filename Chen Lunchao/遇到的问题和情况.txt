@@ -24,4 +24,4 @@ pip install torch-directml==0.2.3dev240715 -i https://pypi.tuna.tsinghua.edu.cn/
 
 训练Vgg16时：使用Adam优化器的话会导致损失值异常高，使用SGD优化器就不会出现这种情况
 
-训练Cnn时：第一次epoch的准确率最高，之后准确率下降，并保持一定的值不动，可能陷入局部最优了
+训练Cnn时：如果使用Adam优化器，第一次epoch的准确率最高，之后准确率下降，并保持一定的值不动，可能陷入局部最优了

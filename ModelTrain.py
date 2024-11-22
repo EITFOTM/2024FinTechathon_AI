@@ -29,7 +29,7 @@ def train(d: str = 'cpu',
     datasets_dir = ["Face2", "Face3"]
     data_type = ["Train", "Valid"]
     classes = ["Fake", "Real"]
-    batch = 16
+    batch = 96
     # 图像增强详见：https://blog.csdn.net/weixin_46334272/article/details/135395701
     # 进行数据预处理和增强操作:通过对训练集进行各种变换和扩增操作，可以增加训练数据的多样性和丰富性，从而提高模型的泛化能力。
     # 数据增强的目的是通过对训练集中的图像进行随机变换，生成更多样的图像样本，以模拟真实世界中的各种场景和变化。
@@ -53,9 +53,13 @@ def train(d: str = 'cpu',
 
     # 创建模型
     device = get_device(d)
-    print(f'You are training on the {device}.')
+    print(f'You are training on the {device}. Batch size is {batch} and optimizer name is {optimizer_name}.\n'
+          f'Model name is {model_name}.')
     if pre_epochs is None:
         model = model_create(model_name, device)
+        # model = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
+        # model.classifier[6] = torch.nn.Linear(model.classifier[6].in_features, 2, bias=True)
+        # model.to(device)
     else:
         model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
 
@@ -118,7 +122,6 @@ def train(d: str = 'cpu',
                 with torch.set_grad_enabled(phase == 'Train'):
                     outputs = model(images)
                     result_loss = criterion(outputs, labels)
-
                     _, preds = torch.max(outputs, 1)
                     # 训练时更新权重
                     if phase == 'Train':
@@ -190,12 +193,12 @@ def train(d: str = 'cpu',
 
 
 if __name__ == "__main__":
+    # model_name = 'Cnn'
     model_name = 'efficientnet_b0'
-    # model_name = 'Vgg16'  # Vgg16模型不能用Adam优化器，否则可能会出现损失异常大的情况
-    optimizer_name = "Adam"
+    optimizer_name = "SGD"
     lr = 0.01
-    epochs = 3
-    pre_epochs = None
+    epochs = 1
+    pre_epochs = 6
     d = 'cuda'
     # NVIDIA显卡用"cuda"，没有显卡用"cpu"
     train(d=d, model_name=model_name, optimizer_name=optimizer_name,

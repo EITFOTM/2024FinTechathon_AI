@@ -31,7 +31,8 @@ def test(normalize,
 
     # 加载模型
     device = get_device(d)
-    print(f'You are testing on the {device}.')
+    print(f'You are testing on the {device}. Batch size is {batch} and optimizer name is {optimizer_name}.\n'
+          f'Model name is {model_name}.')
 
     model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
     # model = globals()[model_name]()  # 找到对应模型并调用它
@@ -68,14 +69,15 @@ def test(normalize,
     test_time = test_end_time - test_start_time
     print('\n')
     # 混淆矩阵分析模型预测的结果
-    cm = ConfusionMatrix(y_true, y_pred,classes,normalize)
+    title = f'Model{model_name}_{optimizer_name}_e{pre_epochs}'
+    cm = ConfusionMatrix(y_true, y_pred, classes, normalize, title)
     # 混淆矩阵可视化
     cm.plot_confusion_matrix()
     # 模型参数量/计算量和推理速度计算
     evaluation(model, device)
     minutes, seconds = divmod(test_time, 60)
     print(f'Total time: {minutes:.0f} minutes {seconds:.1f} seconds.')
-    print(f'Best accuracy: {100 * correct / total:.2f}%')
+    print(f'Total accuracy: {100 * correct / total:.2f}%')
 
 
 if __name__ == '__main__':

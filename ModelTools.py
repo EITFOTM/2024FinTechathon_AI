@@ -1,21 +1,21 @@
 import thop
 import torch
 import cpuinfo
+import itertools
 import torchvision
 import numpy as np
-from mpmath.libmp import normalize
 from ModelCnn import *
 from ModelDataset import *
 from ModelEfficientNet import *
+import matplotlib.pyplot as plt
 import sklearn.metrics as metrics
+from mpmath.libmp import normalize
 from torchvision import transforms
 from torch.utils.data import DataLoader, ConcatDataset
-import matplotlib.pyplot as plt
-import itertools
 # pip install py-cpuinfo -i https://pypi.tuna.tsinghua.edu.cn/simple
 # pip install scikit-learn -i https://pypi.tuna.tsinghua.edu.cn/simple
 # pip install thop -i https://pypi.tuna.tsinghua.edu.cn/simple
-
+# pip install matplotlib -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 def get_device(device: str):
     """
@@ -214,43 +214,44 @@ class ConfusionMatrix:
     使用Python绘制混淆矩阵
     https://blog.csdn.net/xiaoshiqi17/article/details/136074424
     """
-    def __init__(self, y_true, y_pred,y_labels,normalize):
+    def __init__(self, y_true, y_pred, y_labels, normalize, title):
         self.y_true = y_true
         self.y_pred = y_pred
         self.matrix = metrics.confusion_matrix(self.y_true, self.y_pred)
         self.y_labels = y_labels
         self.normalize = normalize
+        self.title = title
 
-        self.get_confusion_matrix()
+        # self.get_confusion_matrix()
 
-    def get_confusion_matrix(self):
-        total_num = len(self.y_true)
-        matrix = self.matrix
-        tp = matrix[0][0]
-        fp = matrix[0][1]
-        fn = matrix[1][0]
-        tn = matrix[1][1]
-        accuracy = 100 * (tp + tn)/total_num
-        ppv = 100 * tp/(tp+fp)
-        tpr = 100 * tp/(tp+fn)
-        tnr = 100 * tn/(tn+fn)
-        print(matrix)
-        cm_normalized = matrix.astype('float') / matrix.sum(axis=1)[:, np.newaxis]
-        print(cm_normalized)
-        print(f'Accuracy:{accuracy:.2f}%')
-        print(f'PPV:{ppv:.2f}%')
-        print(f'TPR:{tpr:.2f}%')
-        print(f'TNR:{tnr:.2f}%')
+    # def get_confusion_matrix(self):
+    #     total_num = len(self.y_true)
+    #     matrix = self.matrix
+    #     tp = matrix[0][0]
+    #     fp = matrix[0][1]
+    #     fn = matrix[1][0]
+    #     tn = matrix[1][1]
+    #     accuracy = 100 * (tp + tn)/total_num
+    #     ppv = 100 * tp/(tp+fp)
+    #     tpr = 100 * tp/(tp+fn)
+    #     tnr = 100 * tn/(tn+fn)
+    #     print(matrix)
+    #     cm_normalized = matrix.astype('float') / matrix.sum(axis=1)[:, np.newaxis]
+    #     print(cm_normalized)
+    #     print(f'Accuracy:{accuracy:.2f}%')
+    #     print(f'PPV:{ppv:.2f}%')
+    #     print(f'TPR:{tpr:.2f}%')
+    #     print(f'TNR:{tnr:.2f}%')
 
     def plot_confusion_matrix(self):
         matrix = self.matrix
-        classes = self.y_labels
+        classes = self.labels
         normalize = self.normalize
-        title = 'Confusion matrix'
+        title = self.title
         cmap = plt.cm.Blues  # 绘制的颜色
 
         print('normalize: ', normalize)
-
+        print(matrix)
         """
          - matrix : 计算出的混淆矩阵的值
          - classes : 混淆矩阵中每一行每一列对应的列
@@ -258,12 +259,12 @@ class ConfusionMatrix:
          """
         if normalize:
             matrix = matrix.astype('float') / matrix.sum(axis=1)[:, np.newaxis]
-            print("显示百分比：")
-            np.set_printoptions(formatter={'float': '{: 0.2f}'.format})
+            print("Show percentage：")
+            np.set_printoptions(formatter={'float': '{: 0.4f}'.format})
             print(matrix)
-        else:
-            print('显示具体数字：')
-            print(matrix)
+        # else:
+        #     print('Show numbers：')
+        #     print(matrix)
         plt.imshow(matrix, interpolation='nearest', cmap=cmap)
         plt.title(title)
         plt.colorbar()
@@ -272,7 +273,7 @@ class ConfusionMatrix:
         plt.yticks(tick_marks, classes)
         # matplotlib版本问题，如果不加下面这行代码，则绘制的混淆矩阵上下只能显示一半，有的版本的matplotlib不需要下面的代码，分别试一下即可
         plt.ylim(len(classes) - 0.5, -0.5)
-        fmt = '.2f' if normalize else '.0f'
+        fmt = '.4f' if normalize else '.0f'
         thresh = matrix.max() / 2.
         for i, j in itertools.product(range(matrix.shape[0]), range(matrix.shape[1])):
             plt.text(j, i, format(matrix[i, j], fmt),
@@ -283,58 +284,3 @@ class ConfusionMatrix:
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
         plt.show()
-
-
-
-
-if __name__ == '__main__':
-    #device = get_device('cuda')
-    #print(device)
-    #print(torch.cuda.is_available())
-    #print(torch.__version__)
-    #print(torchvision.__version__)
-    # optimizer_name = "Adam"
-    # epochs = "3"
-    # model = model_load('efficientnet_b0', device, optimizer_name, epochs)
-    # model_name = 'efficientnet_b0'
-
-    # model = globals()[model_name]()  # 找到对应模型并调用它
-    # model.to(device)
-    # model_path = 'Modelefficientnet_b0_Adam_e3.pt'
-    #l = torch.load('Modelefficientnet_b0_SGD_e1.pt', weights_only=False)
-    # best_acc = l['best_acc'].item()
-
-    # print(l['s'])
-    # model = globals()[model_name]()  # 找到对应模型并调用它
-    # model.to(device)
-    # model_path = f'Model{model_name}_{optimizer_name}_e{epochs}.pt'
-    # state = torch.load(model_path, weights_only=False)
-    # model.load_state_dict(state['state_dict'])
-    # best_acc = state['best_acc']
-    # optimizer_state_dict = state['optimizer']
-    # return model, best_acc, optimizer_state_dict
-    # evaluation(model, device)
-    #true = torch.tensor([1,1,0,0,1,0,1,0,1]).to(device)
-    #pred = torch.tensor([1,1,1,1,1,0,0,0,0]).to(device)
-    # print(true.device.index)
-    # print(type(true))
-    #true = true.numpy()
-    #pred = pred.numpy()
-    #true=[1,1,0,0,1,0,1,0,1]
-    #pred=[1,1,1,1,1,0,0,0,0]
-    #normalize=true
-    #cm = ConfusionMatrix(y_true=true, y_pred=pred,y_labels=["true","fake"],normalize=normalize)
-    #cm.plot_confusion_matrix()
-    # optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
-    # print(type(optimizer).__name__)
-    d="cuda"
-    model_name="efficientnet_b0"
-    optimizer_name="Adam"
-    pre_epochs = 3
-    device = get_device(d)
-    model, best_acc, optimizer_state_dict, history = model_load(model_name, device, d, optimizer_name, pre_epochs)
-    print("the device is:",d,"the optimizer is:",optimizer_name,"the model is:",model_name)
-    evaluation(model, device)
-
-
-
